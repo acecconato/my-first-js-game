@@ -21,6 +21,12 @@ const config = {
 };
 
 let game = new Phaser.Game(config);
+let score = 0;
+let scoreText;
+let platforms;
+let player;
+let cursors;
+let stars;
 
 function preload() {
     this.load.image('sky', './assets/img/sky.png');
@@ -30,11 +36,6 @@ function preload() {
 
     this.load.spritesheet('dude', './assets/img/dude.png', {frameWidth: 32, frameHeight: 48});
 }
-
-let platforms;
-let player;
-let cursors;
-
 
 function create() {
     this.add.image(400, 300, 'sky');
@@ -72,6 +73,28 @@ function create() {
 
     cursors = this.input.keyboard.createCursorKeys();
     this.physics.add.collider(player, platforms);
+
+    stars = this.physics.add.group({
+        key: 'star',
+        repeat: 11,
+        setXY: {x: 12, y: 0, stepX: 70},
+        gravityY: 300
+    })
+
+    stars.children.iterate((child) => {
+        child.setBounceY(Phaser.Math.FloatBetween(0.2, 0.4));
+    });
+
+    this.physics.add.collider(stars, platforms);
+    this.physics.add.overlap(player, stars, collectStar, null, this);
+
+    scoreText = this.add.text(16, 16, 'Score: 0', {fontSize: '32px', fill: '#000'});
+}
+
+function collectStar(player, star) {
+    star.disableBody(true, true);
+    score += 10;
+    scoreText.setText('Score: ' + score);
 }
 
 function update() {
@@ -89,7 +112,7 @@ function update() {
     }
 
     if (cursors.up.isDown && player.body.touching.down) {
-        player.body.setVelocityY(-330);
+        player.body.setVelocityY(-500);
     }
 }
 
