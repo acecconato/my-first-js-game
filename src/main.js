@@ -27,6 +27,8 @@ let platforms;
 let player;
 let cursors;
 let stars;
+let bombs;
+let gameOver;
 
 function preload() {
     this.load.image('sky', './assets/img/sky.png');
@@ -89,12 +91,36 @@ function create() {
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
     scoreText = this.add.text(16, 16, 'Score: 0', {fontSize: '32px', fill: '#000'});
+
+    bombs = this.physics.add.group();
+    this.physics.add.collider(bombs, platforms);
+    this.physics.add.collider(bombs, player, hitBomb, null, this);
 }
 
 function collectStar(player, star) {
     star.disableBody(true, true);
     score += 10;
     scoreText.setText('Score: ' + score);
+
+    if (stars.countActive(true) === 0) {
+        stars.children.iterate((child) => {
+            child.enableBody(true, child.x, 0, true, true);
+        });
+
+        let x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0, 400);
+        let bomb = bombs.create(x, 16, 'bomb');
+        bomb.setBounce(1);
+        bomb.setCollideWorldBounds(true);
+        bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
+    }
+}
+
+function hitBomb(player, bomb) {
+    this.physics.pause();
+    player.setTint(0xff0000);
+    player.anims.play('turn');
+    gameOver = true;
+    this.add.text(config.width / 2, config.height / 2, 'Game Over', {fontSize: '32px'});
 }
 
 function update() {
